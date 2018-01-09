@@ -9,4 +9,6 @@ where `nbo_result.log` is the output from an NBO calculation (e.g. from Gaussian
 
 This will produce the file `example_corrected.sdf`.
 
+Requires Openbabel/Pybel.
+
 This is under the MIT license, GL HF.
