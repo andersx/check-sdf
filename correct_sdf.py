@@ -6,13 +6,14 @@ import copy
 import pybel
 import openbabel
 
+
 CHAR2NUM = dict()
 CHAR2NUM["S"] = 1
 CHAR2NUM["D"] = 2
 CHAR2NUM["T"] = 3
 
-def get_bonds_nbo(filename):
 
+def get_bonds_nbo(filename):
 
     f = open(filename, "r")
     lines = f.readlines()
@@ -60,10 +61,47 @@ def get_bonds_nbo(filename):
         if mode == "lone":
             if "END" in line:
                 mode = "bond"
-        
+
+    charges = [0 for i in range(7)]
+
+    start_line = -1
+    end_line = -1
+
+    for i, line in enumerate(lines):
+
+        if "------ Lewis --------------------------------------" in line:
+            start_line = i
+
+        if "------ non-Lewis ----------------------------------" in line:
+            end_line = i
+
+    for line in lines[start_line+1:end_line]:
+        tokens = line.split()
+
+        if tokens[1] == "CR":
+            a = int(tokens[5]) - 1
+            charges[a] += 2
+        if tokens[1] == "LP":
+            a = int(tokens[5]) - 1
+            charges[a] += 2
+        if tokens[1] == "BD":
+            
+            a = int(tokens[5][:-1]) - 1
+            charges[a] += 1
+
+            b = int(tokens[7]) - 1
+            charges[b] += 1
 
 
-    return bonds
+    total_charge = None
+
+
+    for i, line in enumerate(lines):
+        if "* Total *" in line:
+            tokens = line.split()
+            total_charge = int(float(tokens[3]))
+
+    return bonds, charges, total_charge
 
 
 def delete_bonds_from_mol(mol):
@@ -93,12 +131,30 @@ if __name__ == "__main__":
     nbo_filename = sys.argv[1]
     sdf_filename = sys.argv[2]
 
-    bonds = get_bonds_nbo(nbo_filename)
+    bonds, charges, total_charge = get_bonds_nbo(nbo_filename)
     mol = pybel.readfile("sdf", sdf_filename).next()
     
     mol = delete_bonds_from_mol(mol)
 
     mol_corrected = add_bonds_to_mol(mol, bonds)
+
+    total_charge_check = 0
+
+    for i, atom in enumerate(mol):
+        
+        nuc = atom.OBAtom.GetAtomicNum()
+        formal_charge = nuc - charges[i] 
+
+
+        total_charge_check += formal_charge
+
+        atom.OBAtom.SetFormalCharge(formal_charge)
+        atom.OBAtom.SetSpinMultiplicity(0)
+        # print nuc, charges[i], atom.formalcharge
+
+    # print total_charge, total_charge_check
+    assert (total_charge == total_charge_check)
+    mol.OBMol.SetTotalCharge(total_charge)
 
     outfilename = sdf_filename.rstrip(".sdf") + "_corrected.sdf"
     
