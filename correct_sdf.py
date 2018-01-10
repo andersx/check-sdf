@@ -84,7 +84,7 @@ def get_bonds_nbo(filename):
         end_line = end_lines[i]
 
         for line in lines[start_line+1:end_line]:
-            print line
+            # print line
             tokens = line.split()
 
             if (len(tokens) < 2):
@@ -164,7 +164,7 @@ if __name__ == "__main__":
 
         atom.OBAtom.SetFormalCharge(formal_charge)
         atom.OBAtom.SetSpinMultiplicity(0)
-        print nuc, charges[i], atom.formalcharge
+        # print nuc, charges[i], atom.formalcharge
 
     # print total_charge, total_charge_check
     assert (total_charge == total_charge_check)
