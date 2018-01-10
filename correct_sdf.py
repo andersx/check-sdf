@@ -62,35 +62,49 @@ def get_bonds_nbo(filename):
             if "END" in line:
                 mode = "bond"
 
-    charges = [0 for i in range(7)]
+    charges = [0 for i in range(10000)]
 
-    start_line = -1
-    end_line = -1
+    start_lines = []
+    end_lines = []
 
     for i, line in enumerate(lines):
 
         if "------ Lewis --------------------------------------" in line:
-            start_line = i
+            start_lines.append(i)
 
         if "------ non-Lewis ----------------------------------" in line:
-            end_line = i
+            end_lines.append(i)
+# """            
+# 1234567890123456789012345
+#   137. BD ( 1) C  1- C  2
+# """
+    for i in range(len(start_lines)):
 
-    for line in lines[start_line+1:end_line]:
-        tokens = line.split()
+        start_line = start_lines[i]
+        end_line = end_lines[i]
 
-        if tokens[1] == "CR":
-            a = int(tokens[5]) - 1
-            charges[a] += 2
-        if tokens[1] == "LP":
-            a = int(tokens[5]) - 1
-            charges[a] += 2
-        if tokens[1] == "BD":
-            
-            a = int(tokens[5][:-1]) - 1
-            charges[a] += 1
+        for line in lines[start_line+1:end_line]:
+            print line
+            tokens = line.split()
 
-            b = int(tokens[7]) - 1
-            charges[b] += 1
+            if (len(tokens) < 2):
+                continue
+            elif tokens[1] == "CR":
+                a = int(tokens[5]) - 1
+                charges[a] += 2
+            elif tokens[1] == "LP":
+                a = int(tokens[5]) - 1
+                charges[a] += 2
+            elif tokens[1] == "BD":
+                
+                # print "-" + line[16:19] + "-"
+                # a = int(tokens[5][:-1]) - 1
+                a = int(line[16:19]) - 1
+                charges[a] += 1
+
+                # b = int(tokens[7]) - 1
+                b = int(line[22:25]) - 1
+                charges[b] += 1
 
 
     total_charge = None
@@ -150,7 +164,7 @@ if __name__ == "__main__":
 
         atom.OBAtom.SetFormalCharge(formal_charge)
         atom.OBAtom.SetSpinMultiplicity(0)
-        # print nuc, charges[i], atom.formalcharge
+        print nuc, charges[i], atom.formalcharge
 
     # print total_charge, total_charge_check
     assert (total_charge == total_charge_check)
